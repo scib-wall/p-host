@@ -147,6 +147,8 @@
     };
 
     let firstWinner = false;
+    let serverOffset = 0;
+    let startTime = null;
 
     // Helper function to generate distinct color for each squad circle
     function getSquadColor(index) {
@@ -154,10 +156,25 @@
       return `hsl(${hue}, 85%, 60%)`;
     }
 
-    // 5-Minute Master HQ Timer sync
-    let hqTime = 300;
+    // Sync clock offset relative to Firebase server
+    db.ref('.info/serverTimeOffset').on('value', (snap) => {
+      serverOffset = snap.val() || 0;
+    });
+
+    // Synchronized 5-Minute Master HQ Timer sync using quizState/startTime
+    db.ref('quizState/startTime').on('value', (snap) => {
+      startTime = snap.val();
+    });
+
     setInterval(() => {
-      if (hqTime > 0) hqTime--;
+      if (!startTime) {
+        document.getElementById('hqTimer').textContent = "⏱️ 05:00";
+        return;
+      }
+      const exactServerNow = Date.now() + serverOffset;
+      const elapsedSeconds = Math.floor((exactServerNow - startTime) / 1000);
+      const hqTime = Math.max(0, 300 - elapsedSeconds);
+
       let m = Math.floor(hqTime / 60).toString().padStart(2, '0');
       let s = (hqTime % 60).toString().padStart(2, '0');
       document.getElementById('hqTimer').textContent = `⏱️ ${m}:${s}`;
@@ -226,8 +243,10 @@
     function resetHQ() {
       if (confirm("Reset all positions for a new 5-minute run?")) {
         firstWinner = false;
-        hqTime = 300;
         db.ref('teams').remove();
+        db.ref('quizState').set({
+          startTime: firebase.database.ServerValue.TIMESTAMP
+        });
       }
     }
   </script>
