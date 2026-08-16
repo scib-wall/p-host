@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Genetics Command HQ — Live Radar 🔬</title>
+  <title>Genetics Host HQ — 4-Gen Live Tracker 🔬</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     :root {
       --bg: #070a12;
-      --card: rgba(15, 23, 42, 0.85);
+      --card: rgba(15, 23, 42, 0.88);
       --border: rgba(56, 189, 248, 0.3);
       --cyan: #38bdf8;
       --gold: #f59e0b;
       --green: #22c55e;
       --red: #f43f5e;
+      --purple: #a855f7;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
 
     body {
-      background: linear-gradient(135deg, #070a12 0%, #0f172a 50%, #1e1b4b 100%);
+      background: linear-gradient(135deg, #050811 0%, #0f172a 50%, #1a103c 100%);
       color: #fff; padding: 1.5rem; min-height: 100vh; overflow-x: hidden;
     }
 
@@ -28,39 +30,44 @@
       padding: 1rem 1.8rem; backdrop-filter: blur(16px); margin-bottom: 1.5rem;
     }
 
-    /* Central Pedigree Circuit Board Track */
+    /* Central Radar Track */
     .radar-container {
       background: var(--card); border: 1px solid var(--border); border-radius: 20px;
-      padding: 2rem; position: relative; backdrop-filter: blur(16px); margin-bottom: 1.5rem;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      padding: 1.8rem; backdrop-filter: blur(16px); margin-bottom: 1.5rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative;
     }
 
-    .track-svg { width: 100%; height: auto; max-height: 380px; }
+    .track-svg { width: 100%; height: auto; max-height: 360px; }
 
-    /* Team Circular Avatars */
+    /* Animated Squad Node Icons */
     .squad-node {
-      transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-      cursor: pointer;
+      transition: all 0.9s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .squad-node circle {
       fill: var(--cyan); stroke: #ffffff; stroke-width: 3;
-      filter: drop-shadow(0 0 10px var(--cyan));
+      filter: drop-shadow(0 0 12px var(--cyan));
     }
-    .squad-node text { fill: #fff; font-size: 11px; font-weight: 900; text-anchor: middle; }
+    .squad-node text { fill: #fff; font-size: 10px; font-weight: 900; text-anchor: middle; }
 
-    /* Dynamic Leaderboard Cards */
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    /* Grid Leaderboard Cards */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
     .card {
       background: var(--card); border: 1px solid var(--border); border-radius: 16px;
-      padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;
-      transition: all 0.3s ease;
+      padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;
+      transition: all 0.4s ease; position: relative; overflow: hidden;
     }
-    .card.winner { border-color: var(--gold); box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); animation: pulseWinner 1.5s infinite alternate; }
-    @keyframes pulseWinner { from{transform:scale(1);} to{transform:scale(1.02);} }
+    .card.winner {
+      border-color: var(--gold); box-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
+      animation: goldGlow 1.5s infinite alternate;
+    }
+    @keyframes goldGlow { from{transform:scale(1);} to{transform:scale(1.02);} }
+
+    .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--purple)); transition: width 0.5s ease; }
 
     .btn-reset {
-      background: var(--red); color: white; border: none; padding: 0.6rem 1.2rem;
-      border-radius: 10px; font-weight: 800; cursor: pointer; transition: transform 0.2s;
+      background: var(--red); color: white; border: none; padding: 0.7rem 1.4rem;
+      border-radius: 12px; font-weight: 800; cursor: pointer; transition: transform 0.2s;
     }
     .btn-reset:hover { transform: scale(1.05); }
   </style>
@@ -71,45 +78,44 @@
 
   <header>
     <div>
-      <h1 style="color:var(--cyan); font-size:1.6rem; font-weight:900;">GENETICS COMMAND HQ</h1>
-      <p style="color:#94a3b8; font-size:0.85rem;">Live Circuit Tracker & Pedigree Intelligence Monitor</p>
+      <h1 style="color:var(--cyan); font-size:1.6rem; font-weight:900;">4-GENERATION COMMAND HQ</h1>
+      <p style="color:#94a3b8; font-size:0.85rem;">Live Squad Circuit Radar & Pedigree Leaderboard</p>
     </div>
     <button class="btn-reset" onclick="resetHQ()">RESET SESSION 🔄</button>
   </header>
 
-  <!-- LIVE CIRCUIT MAP -->
+  <!-- LIVE CIRCUIT RADAR MAP -->
   <div class="radar-container">
-    <svg class="track-svg" viewBox="0 0 800 320">
-      <!-- CIRCUIT PATH -->
-      <path d="M 100 160 L 250 80 L 400 240 L 550 80 L 700 160" fill="none" stroke="rgba(56,189,248,0.2)" stroke-width="6" stroke-dasharray="8" />
+    <svg class="track-svg" viewBox="0 0 900 300">
+      <!-- CIRCUIT PATH ACROSS 4 ROUNDS -->
+      <path d="M 80 150 L 280 70 L 480 230 L 680 70 L 830 150" fill="none" stroke="rgba(56,189,248,0.2)" stroke-width="6" stroke-dasharray="8" />
 
-      <!-- CHECKPOINT NODES -->
-      <!-- Checkpoint 1 -->
-      <circle cx="100" cy="160" r="28" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
-      <text x="100" y="165" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">Q1</text>
+      <!-- ROUND 1 CHECKPOINT -->
+      <circle cx="80" cy="150" r="30" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
+      <text x="80" y="154" fill="#38bdf8" font-size="11" font-weight="900" text-anchor="middle">R1: GEN I</text>
 
-      <!-- Checkpoint 2 -->
-      <circle cx="250" cy="80" r="28" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
-      <text x="250" y="85" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">Q2</text>
+      <!-- ROUND 2 CHECKPOINT -->
+      <circle cx="280" cy="70" r="30" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
+      <text x="280" y="74" fill="#38bdf8" font-size="11" font-weight="900" text-anchor="middle">R2: GEN II</text>
 
-      <!-- Checkpoint 3 -->
-      <circle cx="400" cy="240" r="28" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
-      <text x="400" y="245" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">Q3</text>
+      <!-- ROUND 3 CHECKPOINT -->
+      <circle cx="480" cy="230" r="30" fill="#0f172a" stroke="#a855f7" stroke-width="4" />
+      <text x="480" y="234" fill="#a855f7" font-size="11" font-weight="900" text-anchor="middle">R3: GEN III</text>
 
-      <!-- Checkpoint 4 -->
-      <circle cx="550" cy="80" r="28" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
-      <text x="550" y="85" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">Q4</text>
+      <!-- ROUND 4 CHECKPOINT -->
+      <circle cx="680" cy="70" r="30" fill="#0f172a" stroke="#f43f5e" stroke-width="4" />
+      <text x="680" y="74" fill="#f43f5e" font-size="11" font-weight="900" text-anchor="middle">R4: GEN IV</text>
 
-      <!-- Checkpoint 5 (FINISH) -->
-      <circle cx="700" cy="160" r="32" fill="#0f172a" stroke="#f59e0b" stroke-width="5" />
-      <text x="700" y="165" fill="#f59e0b" font-size="14" font-weight="900" text-anchor="middle">🏆</text>
+      <!-- FINISH CHECKPOINT -->
+      <circle cx="830" cy="150" r="34" fill="#0f172a" stroke="#f59e0b" stroke-width="5" />
+      <text x="830" y="155" fill="#f59e0b" font-size="16" font-weight="900" text-anchor="middle">🏆</text>
 
-      <!-- DYNAMIC TEAM ICONS LAYER -->
+      <!-- DYNAMIC SQUAD NODES -->
       <g id="teamNodesGroup"></g>
     </svg>
   </div>
 
-  <!-- SQUAD LEADERBOARD GRID -->
+  <!-- LEADERBOARD GRID -->
   <div class="grid" id="squadGrid">
     <div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 2rem; font-weight:700;">
       📡 Waiting for squad connections...
@@ -129,14 +135,24 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // Coordinates for 5 Checkpoints
-    const coords = {
-      1: { x: 100, y: 160 },
-      2: { x: 250, y: 80 },
-      3: { x: 400, y: 240 },
-      4: { x: 550, y: 80 },
-      5: { x: 700, y: 160 }
-    };
+    // Map stages (1 to 10) to SVG Coordinates along circuit
+    function getStageCoords(stage) {
+      const waypoints = [
+        { x: 80, y: 150 },   // Q1
+        { x: 180, y: 110 },  // Q2
+        { x: 280, y: 70 },   // Q3
+        { x: 380, y: 150 },  // Q4
+        { x: 480, y: 230 },  // Q5
+        { x: 580, y: 150 },  // Q6
+        { x: 680, y: 70 },   // Q7
+        { x: 730, y: 100 },  // Q8
+        { x: 780, y: 125 },  // Q9
+        { x: 830, y: 150 }   // Q10 FINISH
+      ];
+      return waypoints[Math.min(stage - 1, 9)];
+    }
+
+    let previousWinner = null;
 
     db.ref('teams').on('value', (snap) => {
       const data = snap.val();
@@ -150,42 +166,55 @@
       }
 
       const list = Object.keys(data).map(k => data[k]);
+      // Sort by stage descending, then time ascending
       list.sort((a, b) => b.stage - a.stage || a.timeElapsed - b.timeElapsed);
 
       nodesGroup.innerHTML = '';
       grid.innerHTML = '';
 
-      list.forEach((squad, idx) => {
-        const c = coords[squad.stage] || coords[1];
-        // Offset multiple teams at same checkpoint
-        const offsetX = (idx % 3 - 1) * 18;
-        const offsetY = Math.floor(idx / 3) * 18;
+      // Check for first winner trigger FX
+      if (list[0] && list[0].status === 'Finished' && previousWinner !== list[0].team) {
+        previousWinner = list[0].team;
+        confetti({ particleCount: 250, spread: 120, origin: { y: 0.4 } });
+      }
 
-        // Render Animated Node on Circuit
+      list.forEach((squad, idx) => {
+        const c = getStageCoords(squad.stage);
+        const offsetX = (idx % 3 - 1) * 16;
+        const offsetY = Math.floor(idx / 3) * 16;
+
+        // Render Animated Squad Node
         const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         node.setAttribute('class', 'squad-node');
         node.setAttribute('transform', `translate(${c.x + offsetX}, ${c.y + offsetY})`);
         node.innerHTML = `
-          <circle r="16" />
+          <circle r="15" />
           <text y="4">${squad.team.substring(0, 3).toUpperCase()}</text>
         `;
         nodesGroup.appendChild(node);
 
         // Render Leaderboard Card
         const isFinished = squad.status === 'Finished';
-        const card = document.createElement('div');
-        card.className = `card ${isFinished && idx === 0 ? 'winner' : ''}`;
+        const pct = Math.min(Math.round((squad.stage / 10) * 100), 100);
         
         let m = Math.floor((squad.timeElapsed || 0) / 60);
         let s = ((squad.timeElapsed || 0) % 60).toString().padStart(2, '0');
 
+        const card = document.createElement('div');
+        card.className = `card ${isFinished && idx === 0 ? 'winner' : ''}`;
+
         card.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong style="font-size:1rem;">${idx === 0 ? '🥇 ' : ''}${squad.team}</strong>
-            <span style="font-size:0.75rem; color:var(--cyan); font-weight:800;">Q${squad.stage} / 5</span>
+            <strong style="font-size:1.05rem;">${idx === 0 ? '🥇 ' : idx === 1 ? '🥈 ' : idx === 2 ? '🥉 ' : ''}${squad.team}</strong>
+            <span style="font-size:0.75rem; color:var(--cyan); font-weight:800;">ROUND ${squad.round || 1}</span>
           </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${pct}%;"></div>
+          </div>
+
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#94a3b8;">
-            <span>${isFinished ? '🏆 COMPLETED' : '⚡ IN FIELD'}</span>
+            <span>${isFinished ? '🏆 FINISHED' : `Q${squad.stage} / 10`}</span>
             <span>⏱️ ${m}m ${s}s</span>
           </div>
         `;
@@ -194,7 +223,10 @@
     });
 
     function resetHQ() {
-      if (confirm("Reset all squad positions for a new game?")) db.ref('teams').remove();
+      if (confirm("Reset all squad positions for a new game?")) {
+        previousWinner = null;
+        db.ref('teams').remove();
+      }
     }
   </script>
 </body>
