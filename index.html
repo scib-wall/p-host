@@ -7,11 +7,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #0f172a;
       --card-bg: rgba(30, 41, 59, 0.85);
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --primary: #818cf8;
       --success: #34d399;
       --border: rgba(255, 255, 255, 0.1);
     }
@@ -23,7 +21,7 @@
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
       color: var(--text-main);
-      min-height: 100vh; padding: 2rem;
+      min-height: 100vh; padding: clamp(1rem, 2vw, 2rem);
     }
 
     @keyframes gradientBG {
@@ -34,80 +32,56 @@
 
     header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 2rem; border-bottom: 1px solid var(--border);
-      padding-bottom: 1.2rem; backdrop-filter: blur(8px);
+      margin-bottom: 1.5rem; border-bottom: 1px solid var(--border);
+      padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;
     }
 
     h1 {
-      font-size: 2rem; font-weight: 900;
+      font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 900;
       background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      display: flex; align-items: center; gap: 0.6rem;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
     .btn-reset {
       background: linear-gradient(135deg, #f43f5e, #e11d48);
-      color: white; border: none; padding: 0.75rem 1.4rem;
-      border-radius: 12px; font-weight: 800; cursor: pointer;
+      color: white; border: none; padding: 0.6rem 1.2rem;
+      border-radius: 10px; font-weight: 800; cursor: pointer;
       box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
-      transition: all 0.3s ease;
     }
-    .btn-reset:hover { transform: translateY(-2px) scale(1.02); }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.2rem;
     }
 
     .team-card {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 20px; padding: 1.4rem;
-      display: flex; flex-direction: column; gap: 1rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      animation: cardPopIn 0.5s ease-out forwards;
-    }
-
-    @keyframes cardPopIn {
-      0% { transform: scale(0.8); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+      background: var(--card-bg); backdrop-filter: blur(12px);
+      border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem;
+      display: flex; flex-direction: column; gap: 0.8rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); transition: all 0.3s ease;
     }
 
     .team-card.finished {
-      border-color: var(--success);
-      background: rgba(6, 78, 59, 0.7);
-      box-shadow: 0 0 25px rgba(52, 211, 153, 0.3);
+      border-color: var(--success); background: rgba(6, 78, 59, 0.8);
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
     }
 
     .team-header { display: flex; justify-content: space-between; align-items: center; }
-    .team-name { font-weight: 800; font-size: 1.3rem; color: #ffffff; }
+    .team-name { font-weight: 800; font-size: 1.1rem; color: #ffffff; }
 
-    .stage-badge {
-      padding: 0.4rem 0.9rem; border-radius: 50px; font-weight: 800; font-size: 0.85rem;
-    }
-    .stage-badge.r1 { background: #3b82f6; color: white; }
-    .stage-badge.r2 { background: #8b5cf6; color: white; }
-    .stage-badge.r3 { background: #ec4899; color: white; }
-    .stage-badge.done { background: var(--success); color: #022c22; animation: pulse 1s infinite alternate; }
+    .stage-badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-weight: 800; font-size: 0.8rem; }
+    .stage-badge.progress { background: #3b82f6; color: white; }
+    .stage-badge.done { background: var(--success); color: #022c22; }
 
-    .progress-bar-bg { width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+    .progress-bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
     .progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #6366f1, #a855f7);
-      width: 33%; transition: width 0.6s ease-in-out;
+      height: 100%; background: linear-gradient(90deg, #6366f1, #a855f7);
+      transition: width 0.5s ease-in-out;
     }
     .progress-bar-fill.done { background: linear-gradient(90deg, #34d399, #059669); width: 100%; }
 
-    .meta { display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--text-muted); font-weight: 600; }
-
-    @keyframes pulse {
-      from { transform: scale(1); }
-      to { transform: scale(1.08); }
-    }
+    .meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -118,13 +92,13 @@
   <header>
     <div>
       <h1>📡 Host Live Command Center</h1>
-      <p style="color: var(--text-muted); font-size: 0.95rem; margin-top: 0.2rem;">Real-time progress tracker for classroom team missions</p>
+      <p style="color: var(--text-muted); font-size: 0.85rem;">Real-time progress monitor across 5 question checkpoints</p>
     </div>
     <button class="btn-reset" onclick="resetAllTeams()">Reset Session Data 🔄</button>
   </header>
 
   <div class="grid" id="teamsGrid">
-    <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 4rem; font-size: 1.2rem;">
+    <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 4rem; font-size: 1.1rem;">
       Waiting for student teams to enter their names... 🚀
     </div>
   </div>
@@ -149,7 +123,7 @@
       const grid = document.getElementById('teamsGrid');
 
       if (!data) {
-        grid.innerHTML = `<div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 4rem; font-size: 1.2rem;">
+        grid.innerHTML = `<div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 4rem; font-size: 1.1rem;">
           Waiting for student teams to enter their names... 🚀
         </div>`;
         return;
@@ -167,12 +141,10 @@
       const isDone = item.status === 'Completed';
       card.className = `team-card ${isDone ? 'finished' : ''}`;
 
-      let stageClass = `r${item.stage}`;
-      let stageText = `Round ${item.stage}`;
-      let widthPercent = item.stage === 1 ? '33%' : item.stage === 2 ? '66%' : '90%';
+      let stageText = `Q${item.stage} / 5`;
+      let widthPercent = `${(item.stage / 5) * 100}%`;
 
       if (isDone) {
-        stageClass = 'done';
         stageText = 'FINISHED 🏆';
         widthPercent = '100%';
       }
@@ -184,7 +156,7 @@
       card.innerHTML = `
         <div class="team-header">
           <div class="team-name">⚡ ${item.team}</div>
-          <div class="stage-badge ${stageClass}">${stageText}</div>
+          <div class="stage-badge ${isDone ? 'done' : 'progress'}">${stageText}</div>
         </div>
         <div class="progress-bar-bg">
           <div class="progress-bar-fill ${isDone ? 'done' : ''}" style="width: ${widthPercent}"></div>
