@@ -74,6 +74,8 @@
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
 
     .btn-start { background: var(--green); color: #000; border: none; padding: 0.7rem 1.4rem; border-radius: 12px; font-weight: 900; cursor: pointer; }
+    .btn-pause { background: var(--gold); color: #000; border: none; padding: 0.7rem 1.4rem; border-radius: 12px; font-weight: 900; cursor: pointer; }
+    .btn-end { background: var(--purple); color: #fff; border: none; padding: 0.7rem 1.4rem; border-radius: 12px; font-weight: 900; cursor: pointer; }
     .btn-reset { background: var(--red); color: white; border: none; padding: 0.7rem 1.4rem; border-radius: 12px; font-weight: 800; cursor: pointer; }
 
     .countdown-overlay {
@@ -82,10 +84,31 @@
     }
     .countdown-num { font-size: 9rem; font-weight: 900; color: var(--cyan); text-shadow: 0 0 30px var(--cyan); }
 
+    /* Dramatic Celebration Overlay */
+    .celebration-overlay {
+      position: fixed; inset: 0; background: rgba(5, 8, 17, 0.96); backdrop-filter: blur(16px);
+      display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 1000;
+      animation: fadeIn 0.6s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+    .modal-box {
+      background: rgba(15, 23, 42, 0.95); border: 2px solid var(--gold); border-radius: 28px;
+      padding: 3rem; max-width: 650px; width: 90%; text-align: center;
+      box-shadow: 0 0 60px rgba(245, 158, 11, 0.35); animation: pulseGlow 2s infinite alternate;
+    }
+    @keyframes pulseGlow { 0% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.2); } 100% { box-shadow: 0 0 70px rgba(245, 158, 11, 0.5); } }
+
+    .podium-list { margin: 1.5rem 0; display: flex; flex-direction: column; gap: 0.8rem; }
+    .podium-item {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 14px;
+      padding: 0.8rem 1.2rem; display: flex; justify-content: space-between; align-items: center; font-weight: 800;
+    }
+
     @media (max-width: 768px) {
       body { padding: 0.8rem; }
       header { flex-direction: column; align-items: stretch; text-align: center; }
-      .header-controls { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+      .header-controls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; width: 100%; gap: 0.5rem; }
       .radar-container { padding: 1rem; }
       .grid { grid-template-columns: 1fr; }
     }
@@ -100,14 +123,29 @@
     <div class="countdown-num" id="txtCountNum">3</div>
   </div>
 
+  <!-- Dramatic Celebration Modal -->
+  <div class="celebration-overlay" id="overlayCelebration">
+    <div class="modal-box">
+      <div style="font-size: 5rem;">🏆✨🏁</div>
+      <h1 style="color:var(--gold); font-size:2.5rem; font-weight:900; letter-spacing: 1px;">PEDIG-RACE CONCLUDED!</h1>
+      <p style="color:#94a3b8; font-size: 1.1rem; margin-top: 0.5rem;">Official telemetry finalized by Genetics HQ</p>
+      
+      <div class="podium-list" id="podiumList"></div>
+
+      <button class="btn-start" style="padding: 1rem 2.5rem; font-size: 1.1rem; margin-top: 1rem;" onclick="closeCelebration()">CLOSE & ACKNOWLEDGE ⚡</button>
+    </div>
+  </div>
+
   <header>
     <div>
       <h1 style="color:var(--cyan); font-size:1.6rem; font-weight:900;">PEDIG-RACE!</h1>
       <p style="color:#94a3b8; font-size:0.85rem;">Live 10-Question Pedigree Circuit Radar</p>
     </div>
-    <div style="display:flex; gap:1rem; align-items:center;" class="header-controls">
+    <div style="display:flex; gap:0.6rem; align-items:center;" class="header-controls">
       <div class="master-timer" id="hqTimer">⏱️ WAITING</div>
       <button class="btn-start" id="btnStartRace" onclick="triggerRaceStart()">START RACE 🚀</button>
+      <button class="btn-pause" id="btnPauseRace" style="display:none;" onclick="togglePauseRace()">PAUSE ⏸️</button>
+      <button class="btn-end" id="btnEndRace" style="display:none;" onclick="endRaceHost()">END GAME 🛑</button>
       <button class="btn-reset" onclick="resetHQ()">RESET HQ 🔄</button>
     </div>
   </header>
@@ -181,6 +219,9 @@
     let firstWinner = false;
     let serverOffset = 0;
     let startTime = null;
+    let isPaused = false;
+    let isEnded = false;
+    let latestSquadList = [];
 
     function getSquadColor(index) {
       const hue = (index * 137.5) % 360;
@@ -191,14 +232,30 @@
       serverOffset = snap.val() || 0;
     });
 
-    db.ref('quizState/startTime').on('value', (snap) => {
-      startTime = snap.val();
-      const btn = document.getElementById('btnStartRace');
-      if (startTime) {
-        btn.style.display = 'none';
+    db.ref('quizState').on('value', (snap) => {
+      const state = snap.val() || {};
+      startTime = state.startTime || null;
+      isPaused = state.paused || false;
+      isEnded = state.ended || false;
+
+      const btnStart = document.getElementById('btnStartRace');
+      const btnPause = document.getElementById('btnPauseRace');
+      const btnEnd = document.getElementById('btnEndRace');
+
+      if (startTime && !isEnded) {
+        btnStart.style.display = 'none';
+        btnPause.style.display = 'inline-block';
+        btnEnd.style.display = 'inline-block';
+        btnPause.textContent = isPaused ? 'RESUME ▶️' : 'PAUSE ⏸️';
       } else {
-        btn.style.display = 'inline-block';
+        btnStart.style.display = 'inline-block';
+        btnPause.style.display = 'none';
+        btnEnd.style.display = 'none';
         document.getElementById('overlayCountdown').style.display = 'none';
+      }
+
+      if (isEnded) {
+        triggerCelebration();
       }
     });
 
@@ -207,6 +264,15 @@
         document.getElementById('hqTimer').textContent = "⏱️ WAITING";
         return;
       }
+      if (isPaused) {
+        document.getElementById('hqTimer').textContent = "⏱️ PAUSED";
+        return;
+      }
+      if (isEnded) {
+        document.getElementById('hqTimer').textContent = "⏱️ CONCLUDED";
+        return;
+      }
+
       const exactServerNow = Date.now() + serverOffset;
       const secondsUntilStart = Math.ceil((startTime - exactServerNow) / 1000);
 
@@ -232,11 +298,54 @@
       let m = Math.floor(hqTime / 60).toString().padStart(2, '0');
       let s = (hqTime % 60).toString().padStart(2, '0');
       document.getElementById('hqTimer').textContent = `⏱️ ${m}:${s}`;
+
+      if (hqTime <= 0 && !isEnded) {
+        endRaceHost();
+      }
     }, 200);
 
     function triggerRaceStart() {
       const futureStartTime = Date.now() + serverOffset + 3500;
-      db.ref('quizState').set({ startTime: futureStartTime });
+      db.ref('quizState').set({ startTime: futureStartTime, paused: false, ended: false });
+    }
+
+    function togglePauseRace() {
+      db.ref('quizState').update({ paused: !isPaused });
+    }
+
+    function endRaceHost() {
+      db.ref('quizState').update({ ended: true, paused: false });
+    }
+
+    function triggerCelebration() {
+      const overlay = document.getElementById('overlayCelebration');
+      overlay.style.display = 'flex';
+      confetti({ particleCount: 350, spread: 120, origin: { y: 0.6 } });
+
+      const podium = document.getElementById('podiumList');
+      podium.innerHTML = '';
+
+      if (latestSquadList.length === 0) {
+        podium.innerHTML = `<div style="color:#94a3b8;">No squad telemetry logged.</div>`;
+        return;
+      }
+
+      latestSquadList.slice(0, 3).forEach((squad, i) => {
+        const medals = ['🥇 1ST PLACE', '🥈 2ND PLACE', '🥉 3RD PLACE'];
+        const colors = ['var(--gold)', '#cbd5e1', '#cd7f32'];
+        const item = document.createElement('div');
+        item.className = 'podium-item';
+        item.style.borderColor = colors[i] || 'var(--border)';
+        item.innerHTML = `
+          <span style="color:${colors[i]}">${medals[i] || `#${i+1}`} • ${squad.team}</span>
+          <span style="color:var(--cyan)">Q${squad.questionIndex || 1}/10 (${squad.timeElapsed || 0}s)</span>
+        `;
+        podium.appendChild(item);
+      });
+    }
+
+    function closeCelebration() {
+      document.getElementById('overlayCelebration').style.display = 'none';
     }
 
     db.ref('teams').on('value', (snap) => {
@@ -247,11 +356,13 @@
       if (!data) {
         nodesGroup.innerHTML = '';
         grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 2rem;">📡 Waiting for squad connections...</div>`;
+        latestSquadList = [];
         return;
       }
 
       const list = Object.keys(data).map(k => data[k]);
       list.sort((a, b) => (b.questionIndex || b.stage) - (a.questionIndex || a.stage) || a.timeElapsed - b.timeElapsed);
+      latestSquadList = list;
 
       nodesGroup.innerHTML = '';
       grid.innerHTML = '';
@@ -259,6 +370,7 @@
       if (list[0] && list[0].status === 'Finished' && !firstWinner) {
         firstWinner = true;
         confetti({ particleCount: 200, spread: 100 });
+        endRaceHost();
       }
 
       list.forEach((squad, idx) => {
@@ -303,6 +415,9 @@
     function resetHQ() {
       if (confirm("Reset headquarters and clear race state?")) {
         firstWinner = false;
+        isPaused = false;
+        isEnded = false;
+        closeCelebration();
         db.ref('teams').remove();
         db.ref('quizState').remove();
       }
