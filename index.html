@@ -3,85 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Command Center - Live Monitor 🖥️</title>
+  <title>Genetics Command HQ — Live Intelligence Dashboard 🔬</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+  
   <style>
     :root {
-      --card-bg: rgba(30, 41, 59, 0.85);
+      --bg-dark: #090d16;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --card-border: rgba(99, 102, 241, 0.25);
+      --accent-cyan: #38bdf8;
+      --accent-indigo: #6366f1;
+      --accent-gold: #f59e0b;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --success: #34d399;
-      --border: rgba(255, 255, 255, 0.1);
+      --success: #10b981;
+      --glow-cyan: rgba(56, 189, 248, 0.35);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    
+
     body {
-      background: linear-gradient(-45deg, #0f172a, #1e1b4b, #0284c7, #1e1b4b);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
+      background: radial-gradient(circle at top, #1e1b4b 0%, #0f172a 50%, #070a12 100%);
       color: var(--text-main);
-      min-height: 100vh; padding: clamp(1rem, 2vw, 2rem);
+      min-height: 100vh;
+      padding: clamp(1rem, 2.5vw, 2rem);
+      overflow-x: hidden;
     }
 
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* Radar / Sci-Fi Scanline Overhead Effect */
+    body::before {
+      content: ''; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: linear-gradient(rgba(18, 16, 38, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+      pointer-events: none; z-index: 10; opacity: 0.6;
     }
 
     header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 1.5rem; border-bottom: 1px solid var(--border);
-      padding-bottom: 1rem; flex-wrap: wrap; gap: 1rem;
+      background: var(--card-bg); backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border); border-radius: 20px;
+      padding: 1.2rem 1.8rem; margin-bottom: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+      flex-wrap: wrap; gap: 1rem;
+    }
+
+    .hq-title { display: flex; align-items: center; gap: 1rem; }
+    .radar-beacon {
+      width: 18px; height: 18px; background: #38bdf8; border-radius: 50%;
+      box-shadow: 0 0 15px #38bdf8; animation: pulseBeacon 1.5s infinite;
+    }
+
+    @keyframes pulseBeacon {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+      70% { transform: scale(1.1); box-shadow: 0 0 0 12px rgba(56, 189, 248, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
     }
 
     h1 {
-      font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 900;
-      background: linear-gradient(135deg, #a5b4fc 0%, #38bdf8 100%);
+      font-size: clamp(1.4rem, 2.5vw, 2.2rem); font-weight: 900; letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #e0e7ff 0%, #38bdf8 50%, #818cf8 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
 
-    .btn-reset {
-      background: linear-gradient(135deg, #f43f5e, #e11d48);
-      color: white; border: none; padding: 0.6rem 1.2rem;
-      border-radius: 10px; font-weight: 800; cursor: pointer;
-      box-shadow: 0 4px 14px rgba(244, 63, 94, 0.4);
+    /* Live HQ Summary Bar */
+    .stats-bar {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem; margin-bottom: 1.5rem;
     }
 
+    .stat-card {
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      padding: 1rem 1.2rem; border-radius: 16px; backdrop-filter: blur(12px);
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .stat-val { font-size: 1.8rem; font-weight: 900; color: var(--accent-cyan); }
+    .stat-lbl { font-size: 0.75rem; text-transform: uppercase; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; }
+
+    /* Tactical Activity Stream */
+    .ticker-wrap {
+      background: rgba(15, 23, 42, 0.6); border: 1px dashed var(--card-border);
+      border-radius: 12px; padding: 0.6rem 1rem; margin-bottom: 1.5rem;
+      font-size: 0.85rem; font-weight: 700; color: #cbd5e1;
+      display: flex; align-items: center; gap: 0.8rem; overflow: hidden;
+    }
+    .ticker-pulse { color: var(--success); animation: blink 1s infinite alternate; }
+    @keyframes blink { from { opacity: 0.4; } to { opacity: 1; } }
+
+    /* Dynamic Leaderboard Grid */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.2rem;
     }
 
-    .team-card {
-      background: var(--card-bg); backdrop-filter: blur(12px);
-      border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem;
-      display: flex; flex-direction: column; gap: 0.8rem;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); transition: all 0.3s ease;
+    .squad-card {
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 18px; padding: 1.3rem; backdrop-filter: blur(16px);
+      display: flex; flex-direction: column; gap: 0.9rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative; overflow: hidden;
     }
 
-    .team-card.finished {
-      border-color: var(--success); background: rgba(6, 78, 59, 0.8);
-      box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+    .squad-card:hover { transform: translateY(-4px) scale(1.01); border-color: var(--accent-cyan); }
+
+    /* Rank Accents */
+    .squad-card.rank-1 { border-color: var(--accent-gold); box-shadow: 0 0 25px rgba(245, 158, 11, 0.25); }
+    .squad-card.rank-1::before { content: '🥇 LEADER'; position: absolute; top: 8px; right: -25px; background: var(--accent-gold); color: #000; font-size: 0.6rem; font-weight: 900; padding: 3px 25px; transform: rotate(45deg); }
+
+    .squad-card.finished { border-color: var(--success); background: rgba(6, 78, 59, 0.5); }
+
+    .squad-header { display: flex; justify-content: space-between; align-items: center; }
+    .squad-name { font-weight: 800; font-size: 1.15rem; color: #ffffff; display: flex; align-items: center; gap: 0.4rem; }
+
+    .stage-pill {
+      background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan);
+      border: 1px solid var(--accent-cyan); padding: 0.3rem 0.8rem;
+      border-radius: 50px; font-weight: 800; font-size: 0.75rem;
     }
+    .stage-pill.done { background: var(--success); color: #022c22; border: none; }
 
-    .team-header { display: flex; justify-content: space-between; align-items: center; }
-    .team-name { font-weight: 800; font-size: 1.1rem; color: #ffffff; }
-
-    .stage-badge { padding: 0.3rem 0.8rem; border-radius: 50px; font-weight: 800; font-size: 0.8rem; }
-    .stage-badge.progress { background: #3b82f6; color: white; }
-    .stage-badge.done { background: var(--success); color: #022c22; }
-
-    .progress-bar-bg { width: 100%; height: 10px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
-    .progress-bar-fill {
-      height: 100%; background: linear-gradient(90deg, #6366f1, #a855f7);
-      transition: width 0.5s ease-in-out;
+    .progress-track { width: 100%; height: 10px; background: rgba(255,255,255,0.08); border-radius: 10px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8);
+      box-shadow: 0 0 10px var(--glow-cyan); transition: width 0.6s ease;
     }
-    .progress-bar-fill.done { background: linear-gradient(90deg, #34d399, #059669); width: 100%; }
+    .progress-fill.done { background: linear-gradient(90deg, #34d399, #059669); }
 
-    .meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+    .card-footer { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); font-weight: 700; }
+
+    .btn-reset {
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      color: white; border: none; padding: 0.7rem 1.4rem; border-radius: 12px;
+      font-weight: 800; font-size: 0.9rem; cursor: pointer;
+      box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4); transition: all 0.2s;
+    }
+    .btn-reset:hover { transform: scale(1.03); }
   </style>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -90,16 +150,44 @@
 <body>
 
   <header>
-    <div>
-      <h1>📡 Host Live Command Center</h1>
-      <p style="color: var(--text-muted); font-size: 0.85rem;">Real-time progress monitor across 5 question checkpoints</p>
+    <div class="hq-title">
+      <div class="radar-beacon"></div>
+      <div>
+        <h1>GENETICS COMMAND HQ</h1>
+        <p style="color: var(--text-muted); font-size: 0.85rem; font-weight: 700;">
+          Central Intelligence & Live Pedigree Analysis Monitor
+        </p>
+      </div>
     </div>
-    <button class="btn-reset" onclick="resetAllTeams()">Reset Session Data 🔄</button>
+    <button class="btn-reset" onclick="resetHQData()">Purge Session Data 🔄</button>
   </header>
 
-  <div class="grid" id="teamsGrid">
-    <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 4rem; font-size: 1.1rem;">
-      Waiting for student teams to enter their names... 🚀
+  <!-- Live Stats Overview -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <span class="stat-lbl">Active Field Squads</span>
+      <span class="stat-val" id="statSquads">0</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-lbl">Cases Solved</span>
+      <span class="stat-val" id="statSolved" style="color: var(--success);">0</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-lbl">Class Lead Progress</span>
+      <span class="stat-val" id="statLead" style="color: var(--accent-gold);">Q0 / 5</span>
+    </div>
+  </div>
+
+  <!-- Realtime Activity Stream Ticker -->
+  <div class="ticker-wrap">
+    <span class="ticker-pulse">● LIVE FEED:</span>
+    <span id="tickerText">Awaiting squad telemetry stream...</span>
+  </div>
+
+  <!-- Squad Grid -->
+  <div class="grid" id="squadGrid">
+    <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 4rem; font-size: 1.1rem; font-weight: 700;">
+      📡 Connecting to field devices... Enter team names to initiate stream.
     </div>
   </div>
 
@@ -120,57 +208,91 @@
 
     db.ref('teams').on('value', (snapshot) => {
       const data = snapshot.val();
-      const grid = document.getElementById('teamsGrid');
+      const grid = document.getElementById('squadGrid');
 
       if (!data) {
-        grid.innerHTML = `<div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 4rem; font-size: 1.1rem;">
-          Waiting for student teams to enter their names... 🚀
+        grid.innerHTML = `<div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 4rem; font-size: 1.1rem; font-weight: 700;">
+          📡 Connecting to field devices... Enter team names to initiate stream.
         </div>`;
+        updateStats(0, 0, 0);
         return;
       }
 
-      grid.innerHTML = '';
-      Object.keys(data).forEach(key => {
-        const item = data[key];
-        grid.appendChild(createTeamCard(item));
+      const squadList = Object.keys(data).map(key => data[key]);
+
+      // Sort by stage descending, then by time elapsed ascending
+      squadList.sort((a, b) => {
+        if (b.stage !== a.stage) return b.stage - a.stage;
+        return (a.timeElapsed || 0) - (b.timeElapsed || 0);
       });
+
+      let solvedCount = 0;
+      let maxStage = 0;
+
+      grid.innerHTML = '';
+      squadList.forEach((squad, index) => {
+        if (squad.status === 'Completed') solvedCount++;
+        if (squad.stage > maxStage) maxStage = squad.stage;
+        grid.appendChild(createSquadCard(squad, index));
+      });
+
+      updateStats(squadList.length, solvedCount, maxStage);
+      updateTicker(squadList[0]);
     });
 
-    function createTeamCard(item) {
+    function createSquadCard(squad, rank) {
       const card = document.createElement('div');
-      const isDone = item.status === 'Completed';
-      card.className = `team-card ${isDone ? 'finished' : ''}`;
+      const isDone = squad.status === 'Completed';
+      const isRank1 = (rank === 0 && squad.stage > 1);
 
-      let stageText = `Q${item.stage} / 5`;
-      let widthPercent = `${(item.stage / 5) * 100}%`;
+      card.className = `squad-card ${isDone ? 'finished' : ''} ${isRank1 ? 'rank-1' : ''}`;
+
+      let stageText = `Checkpt Q${squad.stage}`;
+      let progressPercent = (squad.stage / 5) * 100;
 
       if (isDone) {
-        stageText = 'FINISHED 🏆';
-        widthPercent = '100%';
+        stageText = 'SOLVED 🏆';
+        progressPercent = 100;
       }
 
-      let mins = Math.floor((item.timeElapsed || 0) / 60);
-      let secs = (item.timeElapsed || 0) % 60;
-      let timeStr = `${mins}m ${secs}s`;
+      let mins = Math.floor((squad.timeElapsed || 0) / 60);
+      let secs = (squad.timeElapsed || 0) % 60;
+      let timeFormatted = `${mins}m ${secs.toString().padStart(2, '0')}s`;
 
       card.innerHTML = `
-        <div class="team-header">
-          <div class="team-name">⚡ ${item.team}</div>
-          <div class="stage-badge ${isDone ? 'done' : 'progress'}">${stageText}</div>
+        <div class="squad-header">
+          <div class="squad-name">🛡️ ${squad.team}</div>
+          <div class="stage-pill ${isDone ? 'done' : ''}">${stageText}</div>
         </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill ${isDone ? 'done' : ''}" style="width: ${widthPercent}"></div>
+        <div class="progress-track">
+          <div class="progress-fill ${isDone ? 'done' : ''}" style="width: ${progressPercent}%"></div>
         </div>
-        <div class="meta">
-          <span>Status: ${item.status}</span>
-          <span>Time: ${timeStr}</span>
+        <div class="card-footer">
+          <span>Status: ${squad.status}</span>
+          <span>⏱️ ${timeFormatted}</span>
         </div>
       `;
       return card;
     }
 
-    function resetAllTeams() {
-      if (confirm("Are you sure you want to clear all team progress for a new class period?")) {
+    function updateStats(total, solved, maxStage) {
+      document.getElementById('statSquads').textContent = total;
+      document.getElementById('statSolved').textContent = solved;
+      document.getElementById('statLead').textContent = `Q${maxStage} / 5`;
+    }
+
+    function updateTicker(leadSquad) {
+      if (!leadSquad) return;
+      const ticker = document.getElementById('tickerText');
+      if (leadSquad.status === 'Completed') {
+        ticker.textContent = `🏆 Squad [ ${leadSquad.team} ] HAS SOLVED THE GENETICS PEDIGREE CASE!`;
+      } else {
+        ticker.textContent = `⚡ Squad [ ${leadSquad.team} ] currently leads the investigation at Checkpoint Question ${leadSquad.stage}.`;
+      }
+    }
+
+    function resetHQData() {
+      if (confirm("⚠️ COMMAND CONFIRMATION: Reset all squad logs and start a new mission period?")) {
         db.ref('teams').remove();
       }
     }
