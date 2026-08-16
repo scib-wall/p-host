@@ -72,13 +72,14 @@
     .card {
       background: var(--panel);
       border: 1px solid var(--border);
+      border-top: 5px solid var(--team-color, var(--cyan));
       border-radius: 16px;
       padding: 1.25rem;
       backdrop-filter: blur(12px);
       transition: transform 0.2s ease, border-color 0.2s ease;
       position: relative;
     }
-    .card.finished { border-color: var(--gold); box-shadow: 0 0 20px rgba(245, 158, 11, 0.25); }
+    .card.finished { border-color: var(--gold); border-top-color: var(--gold); box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); }
 
     .card-head {
       display: flex;
@@ -86,7 +87,20 @@
       align-items: center;
       margin-bottom: 1rem;
     }
+    .team-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .team-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--team-color, var(--cyan));
+      box-shadow: 0 0 10px var(--team-color, var(--cyan));
+    }
     .team-name { font-size: 1.2rem; font-weight: 900; color: #fff; }
+
     .status-tag {
       font-size: 0.75rem;
       font-weight: 800;
@@ -97,7 +111,6 @@
     .tag-active { background: rgba(34, 197, 94, 0.15); color: var(--green); border: 1px solid var(--green); }
     .tag-finished { background: rgba(245, 158, 11, 0.15); color: var(--gold); border: 1px solid var(--gold); }
 
-    /* Progress Tracker Steps */
     .steps-container {
       display: flex;
       justify-content: space-between;
@@ -137,10 +150,10 @@
       box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
     }
     .step-node.current {
-      background: var(--cyan);
-      border-color: var(--cyan);
+      background: var(--team-color, var(--cyan));
+      border-color: var(--team-color, var(--cyan));
       color: #000;
-      box-shadow: 0 0 12px var(--cyan);
+      box-shadow: 0 0 12px var(--team-color, var(--cyan));
       transform: scale(1.15);
     }
 
@@ -197,6 +210,20 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    const teamColors = [
+      '#38bdf8', '#ec4899', '#a855f7', '#f97316', '#10b981', 
+      '#eab308', '#06b6d4', '#f43f5e', '#8b5cf6', '#84cc16'
+    ];
+
+    function getTeamColor(teamName) {
+      let hash = 0;
+      for (let i = 0; i < teamName.length; i++) {
+        hash = teamName.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      const index = Math.abs(hash) % teamColors.length;
+      return teamColors[index];
+    }
+
     const teamsRef = db.ref('teams');
 
     teamsRef.on('value', (snapshot) => {
@@ -221,9 +248,11 @@
 
         const isFinished = team.status === "Finished";
         const currentRound = team.round || 1;
+        const color = getTeamColor(team.team);
 
         const card = document.createElement('div');
         card.className = `card ${isFinished ? 'finished' : ''}`;
+        card.style.setProperty('--team-color', color);
 
         let stepsHTML = '';
         for (let r = 1; r <= 5; r++) {
@@ -240,7 +269,10 @@
 
         card.innerHTML = `
           <div class="card-head">
-            <div class="team-name">👥 ${team.team}</div>
+            <div class="team-badge">
+              <span class="team-dot"></span>
+              <span class="team-name">${team.team}</span>
+            </div>
             <span class="status-tag ${isFinished ? 'tag-finished' : 'tag-active'}">${team.status}</span>
           </div>
           <div class="steps-container">
