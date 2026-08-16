@@ -3,27 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Genetics Command HQ 🔬</title>
+  <title>Genetics Command HQ — Live Radar 🔬</title>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800;900&display=swap" rel="stylesheet">
   <style>
-    :root { var-bg: #090d16; --card: #151c2c; --cyan: #38bdf8; --green: #22c55e; }
+    :root {
+      --bg: #070a12;
+      --card: rgba(15, 23, 42, 0.85);
+      --border: rgba(56, 189, 248, 0.3);
+      --cyan: #38bdf8;
+      --gold: #f59e0b;
+      --green: #22c55e;
+      --red: #f43f5e;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-    body { background: #090d16; color: #fff; padding: 1.5rem; min-height: 100vh; }
-    
-    header { display: flex; justify-content: space-between; align-items: center; background: #151c2c; padding: 1rem 1.5rem; border-radius: 16px; border: 1px solid rgba(56, 189, 248, 0.2); margin-bottom: 1.5rem; }
-    h1 { color: #38bdf8; font-size: 1.5rem; font-weight: 900; }
 
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+    body {
+      background: linear-gradient(135deg, #070a12 0%, #0f172a 50%, #1e1b4b 100%);
+      color: #fff; padding: 1.5rem; min-height: 100vh; overflow-x: hidden;
+    }
 
-    .card { background: #151c2c; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem; }
-    .card.done { border-color: #22c55e; background: rgba(34, 197, 94, 0.1); }
-    .card.lead { border-color: #f59e0b; box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+      padding: 1rem 1.8rem; backdrop-filter: blur(16px); margin-bottom: 1.5rem;
+    }
 
-    .bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
-    .fill { height: 100%; background: #38bdf8; transition: width 0.4s ease; }
-    .fill.done { background: #22c55e; }
+    /* Central Pedigree Circuit Board Track */
+    .radar-container {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 2rem; position: relative; backdrop-filter: blur(16px); margin-bottom: 1.5rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
 
-    .btn-reset { background: #f43f5e; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 800; cursor: pointer; }
+    .track-svg { width: 100%; height: auto; max-height: 380px; }
+
+    /* Team Circular Avatars */
+    .squad-node {
+      transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      cursor: pointer;
+    }
+    .squad-node circle {
+      fill: var(--cyan); stroke: #ffffff; stroke-width: 3;
+      filter: drop-shadow(0 0 10px var(--cyan));
+    }
+    .squad-node text { fill: #fff; font-size: 11px; font-weight: 900; text-anchor: middle; }
+
+    /* Dynamic Leaderboard Cards */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 1rem; display: flex; flex-direction: column; gap: 0.6rem;
+      transition: all 0.3s ease;
+    }
+    .card.winner { border-color: var(--gold); box-shadow: 0 0 20px rgba(245, 158, 11, 0.3); animation: pulseWinner 1.5s infinite alternate; }
+    @keyframes pulseWinner { from{transform:scale(1);} to{transform:scale(1.02);} }
+
+    .btn-reset {
+      background: var(--red); color: white; border: none; padding: 0.6rem 1.2rem;
+      border-radius: 10px; font-weight: 800; cursor: pointer; transition: transform 0.2s;
+    }
+    .btn-reset:hover { transform: scale(1.05); }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -32,15 +71,48 @@
 
   <header>
     <div>
-      <h1>GENETICS COMMAND HQ</h1>
-      <p style="color: #94a3b8; font-size: 0.85rem;">Live Grade 8-9 Pedigree Relay Dashboard</p>
+      <h1 style="color:var(--cyan); font-size:1.6rem; font-weight:900;">GENETICS COMMAND HQ</h1>
+      <p style="color:#94a3b8; font-size:0.85rem;">Live Circuit Tracker & Pedigree Intelligence Monitor</p>
     </div>
-    <button class="btn-reset" onclick="resetAll()">Reset Activity 🔄</button>
+    <button class="btn-reset" onclick="resetHQ()">RESET SESSION 🔄</button>
   </header>
 
+  <!-- LIVE CIRCUIT MAP -->
+  <div class="radar-container">
+    <svg class="track-svg" viewBox="0 0 800 320">
+      <!-- CIRCUIT PATH -->
+      <path d="M 100 160 L 250 80 L 400 240 L 550 80 L 700 160" fill="none" stroke="rgba(56,189,248,0.2)" stroke-width="6" stroke-dasharray="8" />
+
+      <!-- CHECKPOINT NODES -->
+      <!-- Checkpoint 1 -->
+      <circle cx="100" cy="160" r="28" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
+      <text x="100" y="165" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">Q1</text>
+
+      <!-- Checkpoint 2 -->
+      <circle cx="250" cy="80" r="28" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
+      <text x="250" y="85" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">Q2</text>
+
+      <!-- Checkpoint 3 -->
+      <circle cx="400" cy="240" r="28" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
+      <text x="400" y="245" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">Q3</text>
+
+      <!-- Checkpoint 4 -->
+      <circle cx="550" cy="80" r="28" fill="#0f172a" stroke="#38bdf8" stroke-width="4" />
+      <text x="550" y="85" fill="#38bdf8" font-size="12" font-weight="900" text-anchor="middle">Q4</text>
+
+      <!-- Checkpoint 5 (FINISH) -->
+      <circle cx="700" cy="160" r="32" fill="#0f172a" stroke="#f59e0b" stroke-width="5" />
+      <text x="700" y="165" fill="#f59e0b" font-size="14" font-weight="900" text-anchor="middle">🏆</text>
+
+      <!-- DYNAMIC TEAM ICONS LAYER -->
+      <g id="teamNodesGroup"></g>
+    </svg>
+  </div>
+
+  <!-- SQUAD LEADERBOARD GRID -->
   <div class="grid" id="squadGrid">
-    <div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 3rem; font-weight: 700;">
-      📡 Waiting for student squads to log in...
+    <div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 2rem; font-weight:700;">
+      📡 Waiting for squad connections...
     </div>
   </div>
 
@@ -57,48 +129,72 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Coordinates for 5 Checkpoints
+    const coords = {
+      1: { x: 100, y: 160 },
+      2: { x: 250, y: 80 },
+      3: { x: 400, y: 240 },
+      4: { x: 550, y: 80 },
+      5: { x: 700, y: 160 }
+    };
+
     db.ref('teams').on('value', (snap) => {
       const data = snap.val();
+      const nodesGroup = document.getElementById('teamNodesGroup');
       const grid = document.getElementById('squadGrid');
+
       if (!data) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 3rem; font-weight: 700;">📡 Waiting for student squads to log in...</div>`;
+        nodesGroup.innerHTML = '';
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #94a3b8; padding: 2rem; font-weight:700;">📡 Waiting for squad connections...</div>`;
         return;
       }
 
       const list = Object.keys(data).map(k => data[k]);
       list.sort((a, b) => b.stage - a.stage || a.timeElapsed - b.timeElapsed);
 
+      nodesGroup.innerHTML = '';
       grid.innerHTML = '';
-      list.forEach((squad, rank) => {
-        const isDone = squad.status === 'Finished';
-        const isLead = rank === 0 && squad.stage > 1;
-        const percent = (squad.stage / 5) * 100;
-        const mins = Math.floor((squad.timeElapsed || 0) / 60);
-        const secs = ((squad.timeElapsed || 0) % 60).toString().padStart(2, '0');
 
+      list.forEach((squad, idx) => {
+        const c = coords[squad.stage] || coords[1];
+        // Offset multiple teams at same checkpoint
+        const offsetX = (idx % 3 - 1) * 18;
+        const offsetY = Math.floor(idx / 3) * 18;
+
+        // Render Animated Node on Circuit
+        const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        node.setAttribute('class', 'squad-node');
+        node.setAttribute('transform', `translate(${c.x + offsetX}, ${c.y + offsetY})`);
+        node.innerHTML = `
+          <circle r="16" />
+          <text y="4">${squad.team.substring(0, 3).toUpperCase()}</text>
+        `;
+        nodesGroup.appendChild(node);
+
+        // Render Leaderboard Card
+        const isFinished = squad.status === 'Finished';
         const card = document.createElement('div');
-        card.className = `card ${isDone ? 'done' : ''} ${isLead ? 'lead' : ''}`;
+        card.className = `card ${isFinished && idx === 0 ? 'winner' : ''}`;
+        
+        let m = Math.floor((squad.timeElapsed || 0) / 60);
+        let s = ((squad.timeElapsed || 0) % 60).toString().padStart(2, '0');
+
         card.innerHTML = `
-          <div style="display:flex; justify-space-between; align-items:center;">
-            <strong style="font-size:1.1rem;">${isLead ? '🥇 ' : ''}${squad.team}</strong>
-            <span style="font-size:0.75rem; background:rgba(56,189,248,0.2); color:#38bdf8; padding:2px 8px; border-radius:12px; font-weight:800;">
-              ${isDone ? 'FINISHED 🏆' : 'Q' + squad.stage + ' / 5'}
-            </span>
-          </div>
-          <div class="bar">
-            <div class="fill ${isDone ? 'done' : ''}" style="width:${percent}%;"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong style="font-size:1rem;">${idx === 0 ? '🥇 ' : ''}${squad.team}</strong>
+            <span style="font-size:0.75rem; color:var(--cyan); font-weight:800;">Q${squad.stage} / 5</span>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#94a3b8;">
-            <span>Status: ${squad.status}</span>
-            <span>⏱️ ${mins}m ${secs}s</span>
+            <span>${isFinished ? '🏆 COMPLETED' : '⚡ IN FIELD'}</span>
+            <span>⏱️ ${m}m ${s}s</span>
           </div>
         `;
         grid.appendChild(card);
       });
     });
 
-    function resetAll() {
-      if (confirm("Reset all team data for a new game?")) db.ref('teams').remove();
+    function resetHQ() {
+      if (confirm("Reset all squad positions for a new game?")) db.ref('teams').remove();
     }
   </script>
 </body>
