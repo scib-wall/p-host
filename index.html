@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Command Center - Pedigree Relay</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #818cf8;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --border: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body { background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; padding: 2rem; }
+
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+    h1 { font-size: 1.8rem; color: var(--primary); }
+
+    .btn-reset { background: #f43f5e; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+
+    .team-card {
+      background: var(--card-bg); border: 2px solid var(--border); border-radius: 16px; padding: 1.2rem;
+      display: flex; flex-direction: column; gap: 0.8rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+      transition: all 0.3s ease;
+    }
+    .team-card.finished { border-color: var(--success); background: #064e3b; }
+
+    .team-header { display: flex; justify-content: space-between; align-items: center; }
+    .team-name { font-weight: 800; font-size: 1.2rem; }
+
+    .stage-badge {
+      padding: 0.3rem 0.8rem; border-radius: 50px; font-weight: 700; font-size: 0.85rem; background: var(--border);
+    }
+    .stage-badge.r1 { background: #3b82f6; color: white; }
+    .stage-badge.r2 { background: #8b5cf6; color: white; }
+    .stage-badge.r3 { background: #ec4899; color: white; }
+    .stage-badge.done { background: var(--success); color: #022c22; }
+
+    .progress-bar-bg { width: 100%; height: 10px; background: var(--border); border-radius: 10px; overflow: hidden; }
+    .progress-bar-fill { height: 100%; background: var(--primary); width: 33%; transition: width 0.4s ease; }
+    .progress-bar-fill.done { background: var(--success); width: 100%; }
+
+    .meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); }
+  </style>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Pedigree Detective: Live Host Board 🖥️</h1>
+      <p style="color: var(--text-muted);">Real-Time Classroom Progress Monitor</p>
+    </div>
+    <button class="btn-reset" onclick="resetAllTeams()">Reset Session Data 🔄</button>
+  </header>
+
+  <div class="grid" id="teamsGrid">
+    <div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 3rem;">
+      Waiting for student teams to enter their names...
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDtPA9VQ4Yv1MpvbYqdCW24bDf03tOpKqU",
+      authDomain: "pedigree-9f98c.firebaseapp.com",
+      databaseURL: "https://pedigree-9f98c-default-rtdb.firebaseio.com",
+      projectId: "pedigree-9f98c",
+      storageBucket: "pedigree-9f98c.firebasestorage.app",
+      messagingSenderId: "484562688449",
+      appId: "1:484562688449:web:ca050a92acdfcb0b183740",
+      measurementId: "G-RXF33ECWTL"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    db.ref('teams').on('value', (snapshot) => {
+      const data = snapshot.val();
+      const grid = document.getElementById('teamsGrid');
+
+      if (!data) {
+        grid.innerHTML = `<div style="color: var(--text-muted); grid-column: 1 / -1; text-align: center; padding: 3rem;">
+          Waiting for student teams to enter their names...
+        </div>`;
+        return;
+      }
+
+      grid.innerHTML = '';
+      Object.keys(data).forEach(key => {
+        const item = data[key];
+        grid.appendChild(createTeamCard(item));
+      });
+    });
+
+    function createTeamCard(item) {
+      const card = document.createElement('div');
+      const isDone = item.status === 'Completed';
+      card.className = `team-card ${isDone ? 'finished' : ''}`;
+
+      let stageClass = `r${item.stage}`;
+      let stageText = `Round ${item.stage}`;
+      let widthPercent = item.stage === 1 ? '33%' : item.stage === 2 ? '66%' : '90%';
+
+      if (isDone) {
+        stageClass = 'done';
+        stageText = 'FINISHED 🏆';
+        widthPercent = '100%';
+      }
+
+      let mins = Math.floor((item.timeElapsed || 0) / 60);
+      let secs = (item.timeElapsed || 0) % 60;
+      let timeStr = `${mins}m ${secs}s`;
+
+      card.innerHTML = `
+        <div class="team-header">
+          <div class="team-name">${item.team}</div>
+          <div class="stage-badge ${stageClass}">${stageText}</div>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill ${isDone ? 'done' : ''}" style="width: ${widthPercent}"></div>
+        </div>
+        <div class="meta">
+          <span>Status: ${item.status}</span>
+          <span>Time: ${timeStr}</span>
+        </div>
+      `;
+      return card;
+    }
+
+    function resetAllTeams() {
+      if (confirm("Are you sure you want to clear all team progress for a new class period?")) {
+        db.ref('teams').remove();
+      }
+    }
+  </script>
+</body>
+</html>
