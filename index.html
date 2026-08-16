@@ -73,9 +73,16 @@
     .progress-bar { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--purple)); }
 
+    .btn-start { background: var(--green); color: #000; border: none; padding: 0.7rem 1.4rem; border-radius: 12px; font-weight: 900; cursor: pointer; }
     .btn-reset { background: var(--red); color: white; border: none; padding: 0.7rem 1.4rem; border-radius: 12px; font-weight: 800; cursor: pointer; }
 
-    /* Responsive Adaptation for Mobile / Smaller Screens */
+    .countdown-overlay {
+      position: fixed; inset: 0; background: rgba(7, 10, 18, 0.92); backdrop-filter: blur(10px);
+      display: none; justify-content: center; align-items: center; flex-direction: column; z-index: 999;
+    }
+    .countdown-num { font-size: 8rem; font-weight: 900; color: var(--cyan); animation: pop 0.8s ease infinite; }
+    @keyframes pop { 0%{ transform: scale(0.5); opacity: 0; } 50%{ transform: scale(1.2); opacity: 1; } 100%{ transform: scale(1); } }
+
     @media (max-width: 768px) {
       body { padding: 0.8rem; }
       header { flex-direction: column; align-items: stretch; text-align: center; }
@@ -89,14 +96,20 @@
 </head>
 <body>
 
+  <div class="countdown-overlay" id="overlayCountdown">
+    <div style="color:var(--gold); font-size:1.5rem; font-weight:900;">GET READY...</div>
+    <div class="countdown-num" id="txtCountNum">3</div>
+  </div>
+
   <header>
     <div>
       <h1 style="color:var(--cyan); font-size:1.6rem; font-weight:900;">5-MIN SPEED RUN COMMAND HQ</h1>
       <p style="color:#94a3b8; font-size:0.85rem;">Live 5-Question Pedigree Circuit Radar</p>
     </div>
     <div style="display:flex; gap:1rem; align-items:center;" class="header-controls">
-      <div class="master-timer" id="hqTimer">⏱️ 05:00</div>
-      <button class="btn-reset" onclick="resetHQ()">RESET SPEED RUN 🔄</button>
+      <div class="master-timer" id="hqTimer">⏱️ WAITING</div>
+      <button class="btn-start" id="btnStartRace" onclick="triggerRaceStart()">START RACE 🚀</button>
+      <button class="btn-reset" onclick="resetHQ()">RESET HQ 🔄</button>
     </div>
   </header>
 
@@ -150,35 +163,65 @@
     let serverOffset = 0;
     let startTime = null;
 
-    // Helper function to generate distinct color for each squad circle
     function getSquadColor(index) {
-      const hue = (index * 137.5) % 360; // Golden ratio color distribution
+      const hue = (index * 137.5) % 360;
       return `hsl(${hue}, 85%, 60%)`;
     }
 
-    // Sync clock offset relative to Firebase server
     db.ref('.info/serverTimeOffset').on('value', (snap) => {
       serverOffset = snap.val() || 0;
     });
 
-    // Synchronized 5-Minute Master HQ Timer sync using quizState/startTime
     db.ref('quizState/startTime').on('value', (snap) => {
       startTime = snap.val();
+      const btn = document.getElementById('btnStartRace');
+      if (startTime) {
+        btn.style.display = 'none';
+      } else {
+        btn.style.display = 'inline-block';
+      }
     });
 
     setInterval(() => {
       if (!startTime) {
-        document.getElementById('hqTimer').textContent = "⏱️ 05:00";
+        document.getElementById('hqTimer').textContent = "⏱️ WAITING";
         return;
       }
       const exactServerNow = Date.now() + serverOffset;
       const elapsedSeconds = Math.floor((exactServerNow - startTime) / 1000);
-      const hqTime = Math.max(0, 300 - elapsedSeconds);
+      
+      if (elapsedSeconds < 0) {
+        document.getElementById('hqTimer').textContent = `⏱️ STARTING IN ${Math.abs(elapsedSeconds)}s`;
+        return;
+      }
 
+      const hqTime = Math.max(0, 300 - elapsedSeconds);
       let m = Math.floor(hqTime / 60).toString().padStart(2, '0');
       let s = (hqTime % 60).toString().padStart(2, '0');
       document.getElementById('hqTimer').textContent = `⏱️ ${m}:${s}`;
     }, 1000);
+
+    function triggerRaceStart() {
+      const overlay = document.getElementById('overlayCountdown');
+      const num = document.getElementById('txtCountNum');
+      overlay.style.display = 'flex';
+      let c = 3;
+      num.textContent = c;
+
+      const countdownInt = setInterval(() => {
+        c--;
+        if (c > 0) {
+          num.textContent = c;
+        } else if (c === 0) {
+          num.textContent = "GO!";
+        } else {
+          clearInterval(countdownInt);
+          overlay.style.display = 'none';
+          const futureStartTime = Date.now() + serverOffset;
+          db.ref('quizState').set({ startTime: futureStartTime });
+        }
+      }, 1000);
+    }
 
     db.ref('teams').on('value', (snap) => {
       const data = snap.val();
@@ -232,7 +275,7 @@
           </div>
           <div class="progress-bar"><div class="progress-fill" style="width: ${pct}%;"></div></div>
           <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:#94a3b8;">
-            <span>${isFinished ? '🏆 FINISHED' : '⚡ IN FIELD'}</span>
+            <span>${isFinished ? '🏆 FINISHED' : '⚡ IN LOBBY'}</span>
             <span>⏱️ ${squad.timeElapsed || 0}s / 300s</span>
           </div>
         `;
@@ -241,12 +284,10 @@
     });
 
     function resetHQ() {
-      if (confirm("Reset all positions for a new 5-minute run?")) {
+      if (confirm("Reset headquarters and clear race state?")) {
         firstWinner = false;
         db.ref('teams').remove();
-        db.ref('quizState').set({
-          startTime: firebase.database.ServerValue.TIMESTAMP
-        });
+        db.ref('quizState').remove();
       }
     }
   </script>
